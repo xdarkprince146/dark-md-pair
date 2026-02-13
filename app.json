@@ -1,0 +1,22 @@
+{
+"name": "dark-md-pair",
+"description": "Web Session Generator",
+"logo": "https://i.ibb.co/ymr36CFq/IMG-20260208-WA0028.png",
+"repository": "https://github.com/xdarkprince146/dark-md-pair",
+"keywords": ["DARK-Tech"],
+"success_url": "/",
+"buildpacks": [{ "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest" } ],
+"env": {
+"PORT": {
+"description": "Port for web app.4000,5000,3000... any!",
+"value": "5000",
+"required": false
+},
+"MESSAGE": {
+"description": "Just Leave This Blank",
+"value": "",
+"required": false
+}
+}
+
+}

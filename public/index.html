@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request, render_template_string
 app = Flask(__name__)
 
 # ----------------------
-# HTML, CSS & JS
+# Full HTML Content
 # ----------------------
 HTML_PAGE = """
 <!DOCTYPE html>
@@ -126,7 +126,7 @@ HTML_PAGE = """
   <p id="pair"></p>
 </div>
 
-<footer>DARK_TEACH-146 &copy; <span id="year"></span> ☠︎︎𓆩ᴰᵃʳᴋ𓆩𝗥𝗔𝗝𝗣𝗢𝗢𝗧¹⁴⁶࿐ </footer>
+<footer>DARK_TEACH-146 &copy; <span id="year"></span></footer>
 
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -187,12 +187,11 @@ def code():
     number = request.args.get("number")
     if not number:
         return jsonify({"code": "INVALID"})
-    # 🔥 Dummy pairing code (replace with your real logic)
-    pairing_code = number[-6:] + "RHK1"  # Example
+    pairing_code = number[-6:] + "RHK1"  # Dummy example
     return jsonify({"code": pairing_code})
 
 # ----------------------
-# Run server
+# Run Server
 # ----------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000, debug=True)

@@ -1,34 +1,34 @@
-// server.js — Dark MD Pair Site (8-digit demo code)
-
-const express = require("express");
-const path = require("path");
-
+// server.js — DARK_MD-146 Pair Site (Updated)
+const express = require('express');
+const path = require('path');
+const bodyParser = require("body-parser");
+const codeRoute = require('./pair'); // pair route handle /code API
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 
-// public folder میں HTML, CSS, JS serve کرنا
-app.use(express.static(path.join(__dirname, "public")));
+// Max listeners increase
+require('events').EventEmitter.defaultMaxListeners = 500;
 
-// Root route — index.html serve کرے
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// /code API
+app.use('/code', codeRoute);
+
+// Serve index/pair HTML
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'pair.html')); // ensure pair.html exists
 });
 
-// /code API route — number لے کر 8-digit random code دے گا
-app.get("/code", (req, res) => {
-    const number = req.query.number;
+// Serve any static files (CSS/JS) if needed
+app.use(express.static(path.join(__dirname, 'public')));
 
-    if (!number) {
-        return res.json({ code: "Number Missing" });
-    }
-
-    // 8-digit random code generate (demo)
-    const randomCode = Math.floor(10000000 + Math.random() * 90000000);
-
-    res.json({ code: randomCode });
-});
-
-// server start
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`
+✅ Deployment Successful!
+🖤 DARK_MD-146 Session-Server Running on http://localhost:${PORT}
+`);
 });
+
+module.exports = app;

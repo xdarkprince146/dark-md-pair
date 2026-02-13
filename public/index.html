@@ -1,7 +1,10 @@
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, jsonify, request, render_template_string
 
 app = Flask(__name__)
 
+# ----------------------
+# HTML, CSS & JS
+# ----------------------
 HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -24,41 +27,83 @@ HTML_PAGE = """
       background-size: cover;
       color: white;
     }
+
     .container {
       text-align: center;
+      background: rgba(0,0,0,0.5);
+      border-radius: 20px;
       padding: 30px 20px;
       max-width: 400px;
       width: 90%;
     }
+
     h3 {
       margin: 10px 0;
       animation: fadeIn 1.5s ease forwards;
       opacity: 0;
     }
+
     @keyframes fadeIn { to { opacity: 1; } }
-    .input-container-vertical {
+
+    .input-container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 0.5rem;
       margin-top: 20px;
     }
-    input, button {
-      padding: 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
+
+    .input-container input {
+      padding: 0.8rem 1rem;
+      border-radius: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.2);
       background: transparent;
       color: white;
       font-size: 16px;
-    }
-    button { cursor: pointer; font-weight: bold; letter-spacing: 3px; }
-    #loading-spinner { display: none; margin-top: 10px; }
-    footer {
-      position: fixed;
-      bottom: 0;
       width: 100%;
+    }
+
+    .input-container input:focus {
+      outline: none;
+      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
+    }
+
+    .input-container button {
+      padding: 1rem;
+      border-radius: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: transparent;
+      color: white;
+      font-weight: 900;
+      letter-spacing: 0.2rem;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .input-container button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    #loading-spinner {
+      display: none;
+      margin-top: 10px;
+      color: white;
+    }
+
+    .fa-spinner { animation: spin 2s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    footer {
+      margin-top: 20px;
       text-align: center;
-      padding: 10px;
       font-size: 14px;
+      color: #fff;
+    }
+
+    p.bold-italic {
+      font-weight: bold;
+      font-style: italic;
+      font-size: 16px;
     }
   </style>
 </head>
@@ -66,9 +111,10 @@ HTML_PAGE = """
 
 <div class="container">
   <h3>𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔 𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄</h3>
-  <p><b><i>ENTER YOUR NUMBER WITH COUNTRY CODE 🎀</i></b></p>
 
-  <div class="input-container-vertical">
+  <p class="bold-italic">ENTER YOUR NUMBER WITH COUNTRY CODE 🎀</p>
+
+  <div class="input-container">
     <input type="text" id="number" placeholder="92xxxxxxxxx">
     <button id="submit">CODE</button>
   </div>
@@ -77,34 +123,51 @@ HTML_PAGE = """
     <i class="fas fa-spinner fa-spin"></i>
   </div>
 
-  <main id="pair"></main>
+  <p id="pair"></p>
 </div>
 
-<footer> © <span id="year"></span></footer>
+<footer>DARK_TEACH-146 &copy; <span id="year"></span> ☠︎︎𓆩ᴰᵃʳᴋ𓆩𝗥𝗔𝗝𝗣𝗢𝗢𝗧¹⁴⁶࿐ </footer>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
 <script>
-document.getElementById("year").innerText = new Date().getFullYear();
+document.getElementById('year').textContent = new Date().getFullYear();
 
+const pair = document.getElementById("pair");
 const submit = document.getElementById("submit");
 const number = document.getElementById("number");
-const pair = document.getElementById("pair");
 
-submit.onclick = async () => {
-  let bc = number.value.replace(/[^0-9]/g,'');
-  if(bc.length < 11){
-    pair.innerHTML = "<b style='color:red'>Invalid Number</b>";
-    return;
-  }
-  document.getElementById("loading-spinner").style.display = "block";
-  pair.innerHTML = "";
-  try{
-    const res = await axios.get(`/code?number=${bc}`);
-    pair.innerHTML = `<b style='color:red'>CODE: <span style='color:white'>${res.data.code}</span></b>`;
-  }catch{
-    pair.innerHTML = "<b style='color:red'>Service Unavailable</b>";
-  }
-  document.getElementById("loading-spinner").style.display = "none";
+submit.addEventListener("click", async (e) => {
+    e.preventDefault();
+    let bc = number.value.replace(/[^0-9]/g,'');
+    if(!bc || bc.length < 11){
+        pair.innerHTML = '<span style="color:red;font-weight:bold">❗ Enter a valid WhatsApp number with country code.</span>';
+        return;
+    }
+
+    number.value = "+" + bc;
+    document.getElementById("loading-spinner").style.display = "inline-block";
+    pair.innerHTML = '';
+
+    try {
+        const res = await fetch(`/code?number=${bc}`);
+        const data = await res.json();
+        const code = data?.code || "❗ Service Unavailable";
+        pair.innerHTML = `<span style="color:red;font-weight:bold; cursor:pointer" onclick="CopyCode(this)">CODE: <span style="color:white">${code}</span></span>`;
+    } catch {
+        pair.innerHTML = '<span style="color:red;font-weight:bold">❗ Service Unavailable</span>';
+    }
+
+    document.getElementById("loading-spinner").style.display = "none";
+});
+
+function CopyCode(element){
+    const text = element.innerText.replace('CODE: ','');
+    navigator.clipboard.writeText(text);
+    element.innerText = "✔️ COPIED";
+    element.style.color = "red";
+    setTimeout(() => {
+        element.innerText = "CODE: " + text;
+        element.style.color = "white";
+    }, 1000);
 }
 </script>
 
@@ -112,6 +175,9 @@ submit.onclick = async () => {
 </html>
 """
 
+# ----------------------
+# Flask Routes
+# ----------------------
 @app.route("/")
 def home():
     return render_template_string(HTML_PAGE)
@@ -121,9 +187,12 @@ def code():
     number = request.args.get("number")
     if not number:
         return jsonify({"code": "INVALID"})
-    # 🔥 Dummy pairing code (replace with real logic)
-    pairing_code = number[-6:]
+    # 🔥 Dummy pairing code (replace with your real logic)
+    pairing_code = number[-6:] + "RHK1"  # Example
     return jsonify({"code": pairing_code})
 
+# ----------------------
+# Run server
+# ----------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=3000, debug=True)

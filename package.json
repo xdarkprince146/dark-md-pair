@@ -1,0 +1,12 @@
+{
+  "name": "dark-md-pair",
+  "version": "1.0.0",
+  "description": "DARK_MD-146 Pair Site",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

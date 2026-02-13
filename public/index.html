@@ -1,11 +1,3 @@
-from flask import Flask, jsonify, request, render_template_string
-
-app = Flask(__name__)
-
-# ----------------------
-# Full HTML Content
-# ----------------------
-HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,7 +22,7 @@ HTML_PAGE = """
 
     .container {
       text-align: center;
-      background: rgba(0,0,0,0.5);
+      background: transparent; /* FULL TRANSPARENT */
       border-radius: 20px;
       padding: 30px 20px;
       max-width: 400px;
@@ -39,39 +31,47 @@ HTML_PAGE = """
 
     h3 {
       margin: 10px 0;
-      animation: fadeIn 1.5s ease forwards;
+      animation: slideIn 1.5s ease-out forwards, fadeIn 1.5s ease-out forwards;
       opacity: 0;
+      transform: translateY(-50px);
     }
 
-    @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes slideIn {
+      to { transform: translateY(0); }
+    }
 
-    .input-container {
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .input-container-vertical {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
       margin-top: 20px;
     }
 
-    .input-container input {
+    .input-container-vertical input {
       padding: 0.8rem 1rem;
       border-radius: 0.8rem;
       border: 1px solid rgba(255,255,255,0.2);
-      background: transparent;
+      background: transparent; /* FULL TRANSPARENT */
       color: white;
       font-size: 16px;
       width: 100%;
+      box-sizing: border-box;
     }
 
-    .input-container input:focus {
+    .input-container-vertical input:focus {
       outline: none;
       box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
     }
 
-    .input-container button {
+    .input-container-vertical button {
       padding: 1rem;
       border-radius: 0.8rem;
-      border: 1px solid rgba(255,255,255,0.3);
-      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3); /* optional border for visibility */
+      background: transparent; /* FULL TRANSPARENT */
       color: white;
       font-weight: 900;
       letter-spacing: 0.2rem;
@@ -80,8 +80,8 @@ HTML_PAGE = """
       transition: all 0.3s ease-in-out;
     }
 
-    .input-container button:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .input-container-vertical button:hover {
+      background: rgba(255, 255, 255, 0.1); /* subtle hover effect */
     }
 
     #loading-spinner {
@@ -90,14 +90,24 @@ HTML_PAGE = """
       color: white;
     }
 
-    .fa-spinner { animation: spin 2s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .fa-spinner {
+      animation: spin 2s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
     footer {
-      margin-top: 20px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
       text-align: center;
       font-size: 14px;
+      padding: 10px 0;
       color: #fff;
+      background: transparent; /* FULL TRANSPARENT */
     }
 
     p.bold-italic {
@@ -109,89 +119,82 @@ HTML_PAGE = """
 </head>
 <body>
 
-<div class="container">
-  <h3>𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔 𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄</h3>
+  <div class="container">
+    <h3>
+      <br>
+      𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔  𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄 <br>
+      
+    </h3>
 
-  <p class="bold-italic">ENTER YOUR NUMBER WITH COUNTRY CODE 🎀</p>
+    <p class="bold-italic">
+      ENTER YOUR NUMBER WITH COUNTRY CODE 🎀
+    </p>
 
-  <div class="input-container">
-    <input type="text" id="number" placeholder="92xxxxxxxxx">
-    <button id="submit">CODE</button>
+    <div class="input-container-vertical">
+      <input type="number" id="number" placeholder="92xxxxxxxxx">
+      <button id="submit">Code</button>
+    </div>
+
+    <div id="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+
+    <main id="pair"></main>
   </div>
 
-  <div id="loading-spinner">
-    <i class="fas fa-spinner fa-spin"></i>
-  </div>
+  <footer>&copy; <span id="currentYear"></span></footer>
 
-  <p id="pair"></p>
-</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-<footer>DARK_TEACH-146 &copy; <span id="year"></span></footer>
+    let pair = document.getElementById("pair");
+    let submit = document.getElementById("submit");
+    let number = document.getElementById("number");
 
-<script>
-document.getElementById('year').textContent = new Date().getFullYear();
+    async function Copy() {
+      let text = document.getElementById("copy")?.innerText;
+      if(!text) return;
+      await navigator.clipboard.writeText(text.replace('CODE: ', ''));
+      let obj = document.getElementById("copy");
+      obj.innerText = "✔️ COPIED";
+      obj.style.color = "red";
+      obj.style.fontWeight = "bold";
+      setTimeout(() => {
+        obj.innerText = text;
+        obj.style.color = "white";
+      }, 500);
+    }
 
-const pair = document.getElementById("pair");
-const submit = document.getElementById("submit");
-const number = document.getElementById("number");
-
-submit.addEventListener("click", async (e) => {
-    e.preventDefault();
-    let bc = number.value.replace(/[^0-9]/g,'');
-    if(!bc || bc.length < 11){
-        pair.innerHTML = '<span style="color:red;font-weight:bold">❗ Enter a valid WhatsApp number with country code.</span>';
+    submit.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if(!number.value){
+        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Enter your WhatsApp number with country code.</a><br><br>';
         return;
-    }
+      }
+      if(number.value.replace(/[^0-9]/g, "").length < 11){
+        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Invalid number format. Please try again.</a><br><br>';
+        return;
+      }
 
-    number.value = "+" + bc;
-    document.getElementById("loading-spinner").style.display = "inline-block";
-    pair.innerHTML = '';
+      let bc = number.value.replace(/[^0-9]/g,'');
+      number.type = "text";
+      number.value = "+" + bc;
+      number.style.color = "white";
+      document.getElementById("loading-spinner").style.display = "block";
+      pair.innerHTML = '';
 
-    try {
-        const res = await fetch(`/code?number=${bc}`);
-        const data = await res.json();
-        const code = data?.code || "❗ Service Unavailable";
-        pair.innerHTML = `<span style="color:red;font-weight:bold; cursor:pointer" onclick="CopyCode(this)">CODE: <span style="color:white">${code}</span></span>`;
-    } catch {
-        pair.innerHTML = '<span style="color:red;font-weight:bold">❗ Service Unavailable</span>';
-    }
+      try {
+        let { data } = await axios(`/code?number=${bc}`);
+        let code = data.code || "❗ Service Unavailable";
+        pair.innerHTML = `<font id="copy" onclick="Copy()" style="color:red;font-weight:bold" size="5">CODE: <span style="color:white;font-weight:bold">${code}</span></font><br><br><br>`;
+      } catch {
+        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Service Unavailable</a><br><br>';
+      }
 
-    document.getElementById("loading-spinner").style.display = "none";
-});
-
-function CopyCode(element){
-    const text = element.innerText.replace('CODE: ','');
-    navigator.clipboard.writeText(text);
-    element.innerText = "✔️ COPIED";
-    element.style.color = "red";
-    setTimeout(() => {
-        element.innerText = "CODE: " + text;
-        element.style.color = "white";
-    }, 1000);
-}
-</script>
+      document.getElementById("loading-spinner").style.display = "none";
+    });
+  </script>
 
 </body>
-</html>
-"""
-
-# ----------------------
-# Flask Routes
-# ----------------------
-@app.route("/")
-def home():
-    return render_template_string(HTML_PAGE)
-
-@app.route("/code")
-def code():
-    number = request.args.get("number")
-    if not number:
-        return jsonify({"code": "INVALID"})
-    pairing_code = number[-6:] + "RHK1"  # Dummy example
-    return jsonify({"code": pairing_code})
-
-# ----------------------
-# Run Server
-# ----------------------
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000, debug=True)
+  </html>

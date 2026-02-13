@@ -1,3 +1,8 @@
+from flask import Flask, request, jsonify, render_template_string
+
+app = Flask(__name__)
+
+HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,160 +24,106 @@
       background-size: cover;
       color: white;
     }
-
     .container {
       text-align: center;
-      background: transparent;
-      border-radius: 20px;
       padding: 30px 20px;
       max-width: 400px;
       width: 90%;
     }
-
     h3 {
       margin: 10px 0;
-      animation: slideIn 1.5s ease-out forwards, fadeIn 1.5s ease-out forwards;
+      animation: fadeIn 1.5s ease forwards;
       opacity: 0;
-      transform: translateY(-50px);
     }
-
-    @keyframes slideIn { to { transform: translateY(0); } }
     @keyframes fadeIn { to { opacity: 1; } }
-
     .input-container-vertical {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 10px;
       margin-top: 20px;
     }
-
-    .input-container-vertical input {
-      padding: 0.8rem 1rem;
-      border-radius: 0.8rem;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: transparent;
-      color: white;
-      font-size: 16px;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .input-container-vertical input:focus {
-      outline: none;
-      box-shadow: inset 0 0 5px rgba(255,255,255,0.3);
-    }
-
-    .input-container-vertical button {
-      padding: 1rem;
-      border-radius: 0.8rem;
+    input, button {
+      padding: 14px;
+      border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.3);
       background: transparent;
       color: white;
-      font-weight: 900;
-      letter-spacing: 0.2rem;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.3s ease-in-out;
+      font-size: 16px;
     }
-
-    .input-container-vertical button:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    #loading-spinner {
-      display: none;
-      margin-top: 10px;
-      color: white;
-    }
-
-    .fa-spinner { animation: spin 2s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+    button { cursor: pointer; font-weight: bold; letter-spacing: 3px; }
+    #loading-spinner { display: none; margin-top: 10px; }
     footer {
       position: fixed;
       bottom: 0;
       width: 100%;
       text-align: center;
+      padding: 10px;
       font-size: 14px;
-      padding: 10px 0;
-      color: #fff;
-      background: transparent;
-    }
-
-    p.bold-italic {
-      font-weight: bold;
-      font-style: italic;
-      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <h3>𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔  𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄</h3>
+<div class="container">
+  <h3>𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔 𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄</h3>
+  <p><b><i>ENTER YOUR NUMBER WITH COUNTRY CODE 🎀</i></b></p>
 
-    <p class="bold-italic">ENTER YOUR NUMBER WITH COUNTRY CODE 🎀</p>
-
-    <div class="input-container-vertical">
-      <input type="text" id="number" placeholder="92xxxxxxxxx">
-      <button id="submit">Code</button>
-    </div>
-
-    <div id="loading-spinner">
-      <i class="fas fa-spinner fa-spin"></i>
-    </div>
-
-    <main id="pair"></main>
+  <div class="input-container-vertical">
+    <input type="text" id="number" placeholder="92xxxxxxxxx">
+    <button id="submit">CODE</button>
   </div>
 
-  <footer> DARK_TEACH-146 &copy; <span id="currentYear"></span> ☠︎︎𓆩ᴰᵃʳᴋ᭄🖤𓆩𝗥𝗔𝗝𝗣𝗢𝗢𝗧¹⁴⁶࿐ </footer>
+  <div id="loading-spinner">
+    <i class="fas fa-spinner fa-spin"></i>
+  </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
-  <script>
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+  <main id="pair"></main>
+</div>
 
-    const pair = document.getElementById("pair");
-    const submit = document.getElementById("submit");
-    const number = document.getElementById("number");
+<footer>DARK_TEACH-146 © <span id="year"></span></footer>
 
-    async function Copy() {
-      const text = document.getElementById("copy")?.innerText;
-      if(!text) return;
-      await navigator.clipboard.writeText(text.replace('CODE: ', ''));
-      const obj = document.getElementById("copy");
-      obj.innerText = "✔️ COPIED";
-      obj.style.color = "red";
-      obj.style.fontWeight = "bold";
-      setTimeout(() => {
-        obj.innerText = text;
-        obj.style.color = "white";
-      }, 500);
-    }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+<script>
+document.getElementById("year").innerText = new Date().getFullYear();
 
-    submit.addEventListener("click", async (e) => {
-      e.preventDefault();
-      let bc = number.value.replace(/[^0-9]/g,'');
-      if(!bc || bc.length < 11){
-        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Enter a valid WhatsApp number with country code.</a><br><br>';
-        return;
-      }
+const submit = document.getElementById("submit");
+const number = document.getElementById("number");
+const pair = document.getElementById("pair");
 
-      number.value = "+" + bc;
-      number.style.color = "white";
-      document.getElementById("loading-spinner").style.display = "block";
-      pair.innerHTML = '';
-
-      try {
-        const { data } = await axios(`/code?number=${bc}`);
-        const code = data?.code || "❗ Service Unavailable";
-        pair.innerHTML = `<font id="copy" onclick="Copy()" style="color:red;font-weight:bold" size="5">CODE: <span style="color:white;font-weight:bold">${code}</span></font><br><br><br>`;
-      } catch {
-        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Service Unavailable</a><br><br>';
-      }
-
-      document.getElementById("loading-spinner").style.display = "none";
-    });
-  </script>
+submit.onclick = async () => {
+  let bc = number.value.replace(/[^0-9]/g,'');
+  if(bc.length < 11){
+    pair.innerHTML = "<b style='color:red'>Invalid Number</b>";
+    return;
+  }
+  document.getElementById("loading-spinner").style.display = "block";
+  pair.innerHTML = "";
+  try{
+    const res = await axios.get(`/code?number=${bc}`);
+    pair.innerHTML = `<b style='color:red'>CODE: <span style='color:white'>${res.data.code}</span></b>`;
+  }catch{
+    pair.innerHTML = "<b style='color:red'>Service Unavailable</b>";
+  }
+  document.getElementById("loading-spinner").style.display = "none";
+}
+</script>
 
 </body>
-  </html>
+</html>
+"""
+
+@app.route("/")
+def home():
+    return render_template_string(HTML_PAGE)
+
+@app.route("/code")
+def code():
+    number = request.args.get("number")
+    if not number:
+        return jsonify({"code": "INVALID"})
+    # 🔥 Dummy pairing code (replace with real logic)
+    pairing_code = number[-6:]
+    return jsonify({"code": pairing_code})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=3000, debug=True)

@@ -6,18 +6,23 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// public folder میں HTML اور CSS serve کرنا
+// public folder میں HTML, CSS, JS serve کرنا
 app.use(express.static(path.join(__dirname, "public")));
 
-// /code API route — یہ number لے کر 8-digit random code دے گا (demo purpose)
-app.get("/code", async (req, res) => {
+// Root route — index.html serve کرے
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// /code API route — number لے کر 8-digit random code دے گا
+app.get("/code", (req, res) => {
     const number = req.query.number;
 
     if (!number) {
         return res.json({ code: "Number Missing" });
     }
 
-    // Random 8-digit code generate (demo)
+    // 8-digit random code generate (demo)
     const randomCode = Math.floor(10000000 + Math.random() * 90000000);
 
     res.json({ code: randomCode });
@@ -25,5 +30,5 @@ app.get("/code", async (req, res) => {
 
 // server start
 app.listen(PORT, () => {
-    console.log("Server running on port " + PORT);
+    console.log(`Server running on http://localhost:${PORT}`);
 });

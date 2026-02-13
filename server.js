@@ -1,4 +1,4 @@
-// server.js — Dark MD Pair Site
+// server.js — Dark MD Pair Site (8-digit demo code)
 
 const express = require("express");
 const path = require("path");
@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 // public folder میں HTML اور CSS serve کرنا
 app.use(express.static(path.join(__dirname, "public")));
 
-// /code API route — یہ number لے کر 6-digit random code دے گا
+// /code API route — یہ number لے کر 8-digit random code دے گا (demo purpose)
 app.get("/code", async (req, res) => {
     const number = req.query.number;
 
@@ -17,8 +17,8 @@ app.get("/code", async (req, res) => {
         return res.json({ code: "Number Missing" });
     }
 
-    // Random 6-digit code generate
-    const randomCode = Math.floor(100000 + Math.random() * 900000);
+    // Random 8-digit code generate (demo)
+    const randomCode = Math.floor(10000000 + Math.random() * 90000000);
 
     res.json({ code: randomCode });
 });

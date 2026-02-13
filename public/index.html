@@ -109,14 +109,12 @@
 <body>
 
   <div class="container">
-    <h3>
-      𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔  𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄
-    </h3>
+    <h3>𝐃𝐀𝐑𝐊_𝐌𝐃-𝟏𝟒𝟔  𝐏𝐀𝐈𝐑 𝐒𝐈𝐓𝐄</h3>
 
     <p class="bold-italic">ENTER YOUR NUMBER WITH COUNTRY CODE 🎀</p>
 
     <div class="input-container-vertical">
-      <input type="number" id="number" placeholder="92xxxxxxxxx">
+      <input type="text" id="number" placeholder="92xxxxxxxxx">
       <button id="submit">Code</button>
     </div>
 
@@ -127,21 +125,21 @@
     <main id="pair"></main>
   </div>
 
-  <footer>&copy; <span id="currentYear"></span></footer>
+  <footer>&copy; <span id="currentYear"></span> ☠︎︎𓆩ᴰᵃʳᴋ᭄🖤𓆩𝗥𝗔𝗝𝗣𝗢𝗢𝗧¹⁴⁶࿐</footer>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
   <script>
     document.getElementById('currentYear').textContent = new Date().getFullYear();
 
-    let pair = document.getElementById("pair");
-    let submit = document.getElementById("submit");
-    let number = document.getElementById("number");
+    const pair = document.getElementById("pair");
+    const submit = document.getElementById("submit");
+    const number = document.getElementById("number");
 
     async function Copy() {
-      let text = document.getElementById("copy")?.innerText;
+      const text = document.getElementById("copy")?.innerText;
       if(!text) return;
       await navigator.clipboard.writeText(text.replace('CODE: ', ''));
-      let obj = document.getElementById("copy");
+      const obj = document.getElementById("copy");
       obj.innerText = "✔️ COPIED";
       obj.style.color = "red";
       obj.style.fontWeight = "bold";
@@ -153,25 +151,20 @@
 
     submit.addEventListener("click", async (e) => {
       e.preventDefault();
-      if(!number.value){
-        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Enter your WhatsApp number with country code.</a><br><br>';
-        return;
-      }
-      if(number.value.replace(/[^0-9]/g, "").length < 11){
-        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Invalid number format. Please try again.</a><br><br>';
+      let bc = number.value.replace(/[^0-9]/g,'');
+      if(!bc || bc.length < 11){
+        pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Enter a valid WhatsApp number with country code.</a><br><br>';
         return;
       }
 
-      let bc = number.value.replace(/[^0-9]/g,'');
-      number.type = "text";
       number.value = "+" + bc;
       number.style.color = "white";
       document.getElementById("loading-spinner").style.display = "block";
       pair.innerHTML = '';
 
       try {
-        let { data } = await axios(`/code?number=${bc}`);
-        let code = data.code || "❗ Service Unavailable";
+        const { data } = await axios(`/code?number=${bc}`);
+        const code = data?.code || "❗ Service Unavailable";
         pair.innerHTML = `<font id="copy" onclick="Copy()" style="color:red;font-weight:bold" size="5">CODE: <span style="color:white;font-weight:bold">${code}</span></font><br><br><br>`;
       } catch {
         pair.innerHTML = '<a style="color:red;font-weight:bold">❗ Service Unavailable</a><br><br>';
